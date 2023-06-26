@@ -16,14 +16,11 @@ namespace RLTExample
         static void Main(string[] args)
         {
 
-            var config = new ConfigurationBuilder()
-               .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
-
-            var securityKey = config.GetSection("key").Value;
-
             var builder = WebApplication.CreateBuilder(args);
+
+            var config = builder.Configuration;
+            var securityKey = config.GetSection("key").Value;
+            
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -43,15 +40,11 @@ namespace RLTExample
 
             builder.Services.AddAuthorization();
 
-            builder.Services.AddAuthorizationBuilder()
-              .AddPolicy("user", policy =>
-                    policy
-                        .RequireRole("user")
-                        .RequireClaim("scope", "api"))
-              .AddPolicy("admin", policy =>
-                    policy
-                        .RequireRole("admin")
-                        .RequireClaim("scope", "api"));
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("user", policy => policy.RequireRole("user").RequireClaim("scope", "api"));
+                options.AddPolicy("admin", policy => policy.RequireRole("admin").RequireClaim("scope", "api"));
+            });
 
             var app = builder.Build();
 
